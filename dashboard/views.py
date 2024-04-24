@@ -4,10 +4,10 @@ from django.contrib.auth.decorators import login_required
 from django.contrib.auth.decorators import user_passes_test
 from django.http import Http404
 
-from shop.models import Product
+from shop.models import Product, Category
 from accounts.models import User
 from orders.models import Order, OrderItem
-from .forms import AddProductForm, AddCategoryForm, EditProductForm
+from .forms import AddProductForm, AddCategoryForm, EditProductForm, EditCategoryForm
 
 
 def is_manager(user):
@@ -23,7 +23,7 @@ def is_manager(user):
 @login_required
 def products(request):
     products = Product.objects.all()
-    context = {'title':'Products' ,'products':products}
+    context = {'title': 'Products', 'products': products}
     return render(request, 'products.html', context)
 
 
@@ -38,7 +38,7 @@ def add_product(request):
             return redirect('dashboard:add_product')
     else:
         form = AddProductForm()
-    context = {'title':'Add Product', 'form':form}
+    context = {'title': 'Add Product', 'form': form}
     return render(request, 'add_product.html', context)
 
 
@@ -62,7 +62,7 @@ def edit_product(request, id):
             return redirect('dashboard:products')
     else:
         form = EditProductForm(instance=product)
-    context = {'title': 'Edit Product', 'form':form}
+    context = {'title': 'Edit Product', 'form': form}
     return render(request, 'edit_product.html', context)
 
 
@@ -77,15 +77,47 @@ def add_category(request):
             return redirect('dashboard:add_category')
     else:
         form = AddCategoryForm()
-    context = {'title':'Add Category', 'form':form}
+    context = {'title': 'Add Category', 'form': form}
     return render(request, 'add_category.html', context)
+
+
+@user_passes_test(is_manager)
+@login_required
+def categories(request):
+    categories_ = Category.objects.all()
+    context = {'title': 'Categories', 'categories': categories_}
+    return render(request, 'categories.html', context)
+
+
+@user_passes_test(is_manager)
+@login_required
+def remove_category(request, id):
+    category = Category.objects.filter(id=id).delete()
+    messages.success(request, 'category has been deleted!', 'success')
+    return redirect('dashboard:categories')
+
+
+@user_passes_test(is_manager)
+@login_required
+def edit_category(request, id):
+    category = get_object_or_404(Category, id=id)
+    if request.method == 'POST':
+        form = EditCategoryForm(request.POST, request.FILES, instance=category)
+        if form.is_valid():
+            form.save()
+            messages.success(request, 'Category has been updated', 'success')
+            return redirect('dashboard:categories')
+    else:
+        form = EditCategoryForm(instance=category)
+    context = {'title': 'Edit Category', 'form': form}
+    return render(request, 'edit_category.html', context)
 
 
 @user_passes_test(is_manager)
 @login_required
 def orders(request):
     orders = Order.objects.all()
-    context = {'title':'Orders', 'orders':orders}
+    context = {'title': 'Orders', 'orders': orders}
     return render(request, 'orders.html', context)
 
 
@@ -94,5 +126,5 @@ def orders(request):
 def order_detail(request, id):
     order = Order.objects.filter(id=id).first()
     items = OrderItem.objects.filter(order=order).all()
-    context = {'title':'order detail', 'items':items, 'order':order}
+    context = {'title': 'order detail', 'items': items, 'order': order}
     return render(request, 'order_detail.html', context)

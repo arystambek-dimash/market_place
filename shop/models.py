@@ -16,12 +16,12 @@ class Category(models.Model):
         return self.title
 
     def get_absolute_url(self):
-        return reverse('shop:product_detail', kwargs={'slug':self.slug})
+        return reverse('shop:product_detail', kwargs={'slug': self.slug})
 
-    def save(self, *args, **kwargs): # new
+    def save(self, *args, **kwargs):  # new
         self.slug = slugify(self.title)
         return super().save(*args, **kwargs)
-        
+
 
 class Product(models.Model):
     category = models.ForeignKey(Category, on_delete=models.CASCADE, related_name='category')
@@ -37,9 +37,9 @@ class Product(models.Model):
 
     def __str__(self):
         return self.slug
-        
+
     def get_absolute_url(self):
-        return reverse('shop:product_detail', kwargs={'slug':self.slug})
+        return reverse('shop:product_detail', kwargs={'slug': self.slug})
 
     def save(self, *args, **kwargs):
         self.slug = slugify(self.title)

@@ -1,0 +1,41 @@
+{% extends "dashboard.html" %}
+
+{% block content %}
+
+    <table class="table table-striped">
+        <thead class="text-muted">
+        <tr>
+            <th scope="col">Category Title</th>
+            <th scope="col">Subcategories</th>
+            <th scope="col"></th>
+            <th scope="col"></th>
+        </tr>
+        </thead>
+        <tbody>
+        {% for category in categories %}
+            <tr>
+                <td>{{ category.title }}</td>
+                <td>
+                    {% if category.sub_categories.all %}
+                        <ul>
+                            {% for subcategory in category.sub_categories.all %}
+                                <li>{{ subcategory.title }}</li>
+                            {% endfor %}
+                        </ul>
+                    {% else %}
+                        No subcategories
+                    {% endif %}
+                </td>
+                <td><a class="text-danger text-decoration-none"
+                       href="{% url 'dashboard:delete_category' category.id %}">Delete</a>
+                </td>
+                <td><a class="text-info text-decoration-none"
+                       href="{% url 'dashboard:edit_category' category.id %}">Edit</a>
+                </td>
+            </tr>
+
+        {% endfor %}
+        </tbody>
+    </table>
+
+{% endblock %}

@@ -13,7 +13,7 @@ def create_manager():
     """
     if not User.objects.filter(email="manager@example.com").first():
         user = User.objects.create_user(
-            "manager@example.com", 'shop manager' ,'managerpass1234'
+            "manager@example.com", 'shop manager', 'managerpass1234'
         )
         # give this user manager role
         user.is_manager = True
@@ -28,32 +28,41 @@ def manager_login(request):
             user = authenticate(
                 request, email=data['email'], password=data['password']
             )
-            if user is not None and user.is_manager:
-                login(request, user)
-                return redirect('dashboard:products')
+            print(user)
+            if user is not None:
+                if user.is_manager:
+                    login(request, user)
+                    return redirect('dashboard:products')
+                else:
+                    messages.error(request, 'User is not manager')
             else:
-                messages.error(
-                    request, 'username or password is wrong', 'danger'
-                )
-                return redirect('accounts:manager_login')
+                messages.error(request, 'Username or password is wrong')
     else:
         form = ManagerLoginForm()
-    context = {'form': form}
-    return render(request, 'manager_login.html', context)
+
+    return render(request, 'manager_login.html', {'form': form})
 
 
 def user_register(request):
     if request.method == 'POST':
         form = UserRegistrationForm(request.POST)
         if form.is_valid():
-            data = form.cleaned_data
-            user = User.objects.create_user(
-                data['email'], data['full_name'], data['password']
-            )
-            return redirect('accounts:user_login')
+            email = form.cleaned_data['email']
+            password = form.cleaned_data['password']
+            full_name = form.cleaned_data['full_name']
+
+            if User.objects.filter(email=email).exists():
+                messages.error(request, "Email already exists")
+            else:
+                user = User.objects.create_user(email=email, password=password, full_name=full_name)
+                messages.success(request, "You have been registered successfully!")
+                return redirect('accounts:user_login')
+        else:
+            messages.error(request, "Invalid form submission. Please check the details.")
     else:
         form = UserRegistrationForm()
-    context = {'title':'Signup', 'form':form}
+
+    context = {'title': 'Signup', 'form': form}
     return render(request, 'register.html', context)
 
 
@@ -75,7 +84,7 @@ def user_login(request):
                 return redirect('accounts:user_login')
     else:
         form = UserLoginForm()
-    context = {'title':'Login', 'form': form}
+    context = {'title': 'Login', 'form': form}
     return render(request, 'login.html', context)
 
 
@@ -92,5 +101,5 @@ def edit_profile(request):
         return redirect('accounts:edit_profile')
     else:
         form = EditProfileForm(instance=request.user)
-    context = {'title':'Edit Profile', 'form':form}
+    context = {'title': 'Edit Profile', 'form': form}
     return render(request, 'edit_profile.html', context)
